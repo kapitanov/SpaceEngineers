@@ -36,27 +36,19 @@ using VRage.Library.Utils;
 namespace Sandbox.Game.Entities.Blocks
 {
     [MyCubeBlockType(typeof(MyObjectBuilder_MyProgrammableBlock))]
-    class MyProgrammableBlock : MyFunctionalBlock, IMyProgrammableBlock, IMyPowerConsumer
+    class MyProgrammableBlock : MyFunctionalBlock, IMyProgrammableBlock, IMyPowerConsumer, IMyScriptProgramEnvironment
     {
         private const int MAX_NUM_EXECUTED_INSTRUCTIONS = 50000;
         private const int MAX_ECHO_LENGTH = 8000; // 100 lines á 80 characters
         private static readonly double STOPWATCH_FREQUENCY = 1.0 / Stopwatch.Frequency;
-        private object m_instance = null;
+        private MyScriptProgram m_instance = null;
         private string m_programData = null;
         private string m_storageData = null;
         private string m_editorData = null;
         private string m_terminalRunArgument = string.Empty;
-        private MethodInfo m_mainMethod = null;
-        private FieldInfo m_programGridGroup = null;
-        private FieldInfo m_storageField = null;
-        private FieldInfo m_meField = null;
-        private FieldInfo m_echoField = null;
-        private StringBuilder m_echoOutput = new StringBuilder();
-        private FieldInfo m_elapsedTimeField = null;
+        private readonly StringBuilder m_echoOutput = new StringBuilder();
         private long m_previousRunTimestamp = 0;
         
-        private readonly object[] m_argumentArray = new object[1]; 
-
         public bool ConsoleOpen = false;
         MyGuiScreenEditor m_editorScreen;
         Assembly m_assembly = null;
@@ -94,12 +86,12 @@ namespace Sandbox.Game.Entities.Blocks
             arg.Getter = (e) => new StringBuilder(e.TerminalRunArgument);
             arg.Setter = (e, v) => e.TerminalRunArgument = v.ToString();
             MyTerminalControlFactory.AddControl(arg);
-            
+
             var terminalRun = new MyTerminalControlButton<MyProgrammableBlock>("TerminalRun", MySpaceTexts.TerminalControlPanel_RunCode, MySpaceTexts.TerminalControlPanel_RunCode_Tooltip, (b) => b.Run());
             terminalRun.Visible = (b) => MyFakes.ENABLE_PROGRAMMABLE_BLOCK && MySession.Static.EnableIngameScripts;
             terminalRun.Enabled = (b) => b.IsWorking == true && b.IsFunctional == true;
             MyTerminalControlFactory.AddControl(terminalRun);
-            
+
             var runAction = new MyTerminalAction<MyProgrammableBlock>("Run", MyTexts.Get(MySpaceTexts.TerminalControlPanel_RunCode), OnRunApplied, null, MyTerminalActionIcons.START);
             runAction.Enabled = (b) => b.IsWorking == true && b.IsFunctional == true;
             runAction.DoUserParameterRequest = RequestRunArgument;
@@ -201,7 +193,7 @@ namespace Sandbox.Game.Entities.Blocks
                         buttonType: MyMessageBoxButtonsType.YES_NO,
                         canHideOthers: false);
 
-                    messageBox.ResultCallback = delegate(MyGuiScreenMessageBox.ResultEnum result2)
+                    messageBox.ResultCallback = delegate (MyGuiScreenMessageBox.ResultEnum result2)
                     {
                         if (result2 == MyGuiScreenMessageBox.ResultEnum.YES)
                         {
@@ -233,51 +225,32 @@ namespace Sandbox.Game.Entities.Blocks
             {
                 return MyTexts.GetString(MySpaceTexts.ProgrammableBlock_Exception_NoAssembly);
             }
-            if (m_mainMethod == null)
+
+            if (m_previousRunTimestamp == 0)
             {
-                return MyTexts.GetString(MySpaceTexts.ProgrammableBlock_Exception_NoMain);
+                m_previousRunTimestamp = Stopwatch.GetTimestamp();
+                m_instance.ElapsedTime = TimeSpan.Zero;
             }
-            if (this.m_elapsedTimeField != null)
+            else
             {
-                if (m_previousRunTimestamp == 0)
-                {
-                    m_previousRunTimestamp = Stopwatch.GetTimestamp();
-                    m_elapsedTimeField.SetValue(m_instance, TimeSpan.Zero);
-                }
-                else
-                {
-                    var currentTimestamp = Stopwatch.GetTimestamp();
-                    var elapsedTime = (currentTimestamp - m_previousRunTimestamp) * Sync.RelativeSimulationRatio;
-                    m_elapsedTimeField.SetValue(m_instance, TimeSpan.FromSeconds(elapsedTime * STOPWATCH_FREQUENCY));
-                    m_previousRunTimestamp = currentTimestamp;
-                }
+                var currentTimestamp = Stopwatch.GetTimestamp();
+                var elapsedTime = (currentTimestamp - m_previousRunTimestamp)*Sync.RelativeSimulationRatio;
+                m_instance.ElapsedTime = TimeSpan.FromSeconds(elapsedTime*STOPWATCH_FREQUENCY);
+                m_previousRunTimestamp = currentTimestamp;
             }
-            if (m_programGridGroup != null)
-            {
-                var gridGroup = MyCubeGridGroups.Static.Logical.GetGroup(CubeGrid);
-                var terminalSystem = gridGroup.GroupData.TerminalSystem;
-                terminalSystem.UpdateGridBlocksOwnership(this.OwnerId);
-                m_programGridGroup.SetValue(m_instance, terminalSystem);
-            }
+
+            var gridGroup = MyCubeGridGroups.Static.Logical.GetGroup(CubeGrid);
+            var terminalSystem = gridGroup.GroupData.TerminalSystem;
+            terminalSystem.UpdateGridBlocksOwnership(this.OwnerId);
+            m_instance.GridTerminalSystem = terminalSystem;
 
             m_isRunning = true;
             string retVal = "";
             IlInjector.RestartCountingInstructions(MAX_NUM_EXECUTED_INSTRUCTIONS);
             try
             {
-                if (m_mainMethodSupportsArgument)
-                {
-                    // Don't know if it's really necessary to predefine this argument array, I suspect not
-                    // due to the cleverness of the compiler, but I do it this way just in case. 
-                    // Obviously if programmable block execution becomes asynchronous at some point this 
-                    // must be reworked.
-                    m_argumentArray[0] = argument ?? string.Empty;
-                    m_mainMethod.Invoke(m_instance, m_argumentArray);
-                }
-                else
-                {
-                    m_mainMethod.Invoke(m_instance, null);
-                }
+                m_instance.Internal_Run(argument);
+
                 if (m_echoOutput.Length > 0)
                     retVal = m_echoOutput.ToString();
             }
@@ -295,7 +268,8 @@ namespace Sandbox.Game.Entities.Blocks
                 }
                 else if (ex.InnerException != null)
                 {
-                    retVal += MyTexts.GetString(MySpaceTexts.ProgrammableBlock_Exception_ExceptionCaught) + ex.InnerException.Message;
+                    retVal += MyTexts.GetString(MySpaceTexts.ProgrammableBlock_Exception_ExceptionCaught) +
+                              ex.InnerException.Message;
                 }
             }
             m_isRunning = false;
@@ -305,13 +279,9 @@ namespace Sandbox.Game.Entities.Blocks
         private void OnProgramTermination()
         {
             m_wasTerminated = true;
-            m_mainMethod = null;
-            m_programGridGroup = null;
-            m_storageField = null;
-            m_meField = null;
-            m_echoField = null;
             m_assembly = null;
             m_echoOutput.Clear();
+            m_timerEventQueue.Clear();
             m_previousRunTimestamp = 0;
         }
 
@@ -351,6 +321,7 @@ namespace Sandbox.Game.Entities.Blocks
 
             this.SyncObject = new MySyncProgrammableBlock(this);
             NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME;
+            NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME; // TODO : only if we have some queued events
 
             PowerReceiver = new MyPowerReceiver(
               MyConsumerGroupEnum.Utility,
@@ -368,6 +339,7 @@ namespace Sandbox.Game.Entities.Blocks
                 Sync.Clients.ClientRemoved += ProgrammableBlock_ClientRemoved;
             }
         }
+
         public override void UpdateOnceBeforeFrame()
         {
             base.UpdateOnceBeforeFrame();
@@ -391,27 +363,27 @@ namespace Sandbox.Game.Entities.Blocks
             }
             UpdateEmissivity();
         }
+
         public override MyObjectBuilder_CubeBlock GetObjectBuilderCubeBlock(bool copy = false)
         {
             MyObjectBuilder_MyProgrammableBlock objectBuilder = (MyObjectBuilder_MyProgrammableBlock)base.GetObjectBuilderCubeBlock(copy);
             objectBuilder.Program = this.m_programData;
             objectBuilder.DefaultRunArgument = this.m_terminalRunArgument;
-            if (m_storageField != null && m_instance != null)
+            if (m_instance != null)
             {
-                objectBuilder.Storage = (string)m_storageField.GetValue(m_instance);
+                objectBuilder.Storage = m_instance.Storage;
             }
 
             return objectBuilder;
         }
 
-        private void CompileAndCreateInstance(string program,string storage)
+        private void CompileAndCreateInstance(string program, string storage)
         {
             if (MySession.Static.EnableIngameScripts == false)
             {
                 return;
             }
             m_wasTerminated = false;
-            m_mainMethod = null;
             Assembly temp = null;
             MyGuiScreenEditor.CompileProgram(program, m_compilerErrors, ref temp);
             if (temp != null)
@@ -426,40 +398,25 @@ namespace Sandbox.Game.Entities.Blocks
                         IlInjector.RestartCountingInstructions(MAX_NUM_EXECUTED_INSTRUCTIONS);
                         try
                         {
-                            m_instance = Activator.CreateInstance(type);
-                            m_programGridGroup = type.GetField("GridTerminalSystem", BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance);
-                            m_storageField = type.GetField("Storage", BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance);
-                            m_meField = type.GetField("Me", BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance);
-                            m_echoField = type.GetField("Echo", BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance);
-                            m_elapsedTimeField = type.GetField("ElapsedTime", BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance);
-                            if (m_programGridGroup != null)
-                            {
-                                // First try to get the main method with a string argument. If this fails, try to get one without.
-                                m_mainMethod = type.GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(string) }, null);
-                                m_mainMethodSupportsArgument = m_mainMethod != null;
-                                if (m_mainMethod == null)
-                                {
-                                    m_mainMethod = type.GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-                                }
-                            }
-                            if (m_storageField != null)
-                            {
-                                m_storageField.SetValue(m_instance, storage);
-                            }
-                            if (m_meField != null)
-                            {
-                                m_meField.SetValue(m_instance, this);
-                            }
-                            if (m_echoField != null)
-                            {
-                                m_echoField.SetValue(m_instance, new Action<string>(EchoTextToDetailInfo));
-                            }
+                            m_instance = (MyScriptProgram)Activator.CreateInstance(type);
+
+                            m_instance.Storage = storage;
+                            m_instance.Internal_SetScriptProgramEnvironment(this);
                         }
                         catch (TargetInvocationException ex)
                         {
                             if (ex.InnerException != null)
                             {
-                                string response = MyTexts.GetString(MySpaceTexts.ProgrammableBlock_Exception_ExceptionCaught) + ex.InnerException.Message;
+                                string response;
+                                if (ex.InnerException is ScriptHasNoMainMethodException)
+                                {
+                                    response = MyTexts.GetString(MySpaceTexts.ProgrammableBlock_Exception_NoMain);
+                                }
+                                else
+                                {
+                                    response = MyTexts.GetString(MySpaceTexts.ProgrammableBlock_Exception_ExceptionCaught) + ex.InnerException.Message;
+                                }
+
                                 if (DetailedInfo.ToString() != response)
                                 {
                                     SyncObject.SendProgramResponseMessage(response);
@@ -517,14 +474,14 @@ namespace Sandbox.Game.Entities.Blocks
                                  messageText: new StringBuilder("Editor is opened by another player.")));
         }
 
-        public void UpdateProgram(string program,string storage)
+        public void UpdateProgram(string program, string storage)
         {
             this.m_editorData = this.m_programData = program;
             this.m_storageData = storage;
             m_compilerErrors.Clear();
             if (Sync.IsServer)
             {
-                CompileAndCreateInstance(m_programData,storage);
+                CompileAndCreateInstance(m_programData, storage);
             }
         }
 
@@ -570,6 +527,7 @@ namespace Sandbox.Game.Entities.Blocks
         {
             base.UpdateAfterSimulation();
             PowerReceiver.Update();
+            UpdateTimerQueue();
         }
 
         private void ComponentStack_IsFunctionalChanged()
@@ -617,5 +575,151 @@ namespace Sandbox.Game.Entities.Blocks
             UpdateEmissivity();
             base.OnEnabledChanged();
         }
+
+        #region IMyScriptProgramEnvironment - methods that are called from scripts
+
+        IMyProgrammableBlock IMyScriptProgramEnvironment.ProgrammableBlock { get { return this; } }
+
+        void IMyScriptProgramEnvironment.WriteEcho(string message)
+        {
+            EchoTextToDetailInfo(message);
+        }
+
+        bool IMyScriptProgramEnvironment.SetTimeout(int timeout, MyScriptTimeoutFunction callback)
+        {
+            if (timeout <= 0)
+            {
+                // Invalid timeout
+                return false;
+            }
+
+            if (m_timerEventQueue.Count >= MAX_TIMER_EVENTS)
+            {
+                // There are too many pending events
+                return false;
+            }
+
+            var ticks = timeout/ TIMER_TICKS_DURATION;
+            var timeToFire = m_currentTimerTick + ticks;
+            var info = new TimerEventInfo
+            {
+                Callback = callback,
+                StartTimeTicks = m_currentTimerTick
+            };
+
+            m_timerEventQueue.Add(timeToFire, info);
+
+            return true;
+        }
+
+        #endregion
+
+        #region SetTimeout() function impl
+
+        private struct TimerEventInfo
+        {
+            public long StartTimeTicks;
+            public MyScriptTimeoutFunction Callback;
+
+            public bool Equals(TimerEventInfo other)
+            {
+                return StartTimeTicks == other.StartTimeTicks;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                return obj is TimerEventInfo && Equals((TimerEventInfo)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return StartTimeTicks.GetHashCode();
+            }
+        }
+
+        // Max count of timer events
+        private const int MAX_TIMER_EVENTS = 5;
+
+        // 60 ticks per second
+        private const int TIMER_TICKS_PER_SECOND = 60;
+
+        // Timer tick duration (in ms) 
+        private const int TIMER_TICKS_DURATION = (int)(1000f/ TIMER_TICKS_PER_SECOND);
+
+        // 5 means than timer event queue will be updated every 5th frame
+        private const int TIMER_TICK_QUANT = 5;
+        
+        private long m_currentTimerTick;
+
+        // List of timer events sorted by time
+        private readonly SortedList<long, TimerEventInfo> m_timerEventQueue = new SortedList<long, TimerEventInfo>();
+
+        private void UpdateTimerQueue()
+        {
+            m_currentTimerTick++;
+
+            if (m_currentTimerTick % TIMER_TICK_QUANT != 0)
+            {
+                return;
+            }
+
+            if (IsWorking == false || IsFunctional == false)
+            {
+                return;
+            }
+
+            if (m_timerEventQueue.Count == 0 || m_isRunning || m_instance == null || m_wasTerminated)
+            {
+                return;
+            }
+
+            var timeToFire = m_timerEventQueue.Keys[0];
+            if (timeToFire <= m_currentTimerTick)
+            {
+                var timerEventInfo = m_timerEventQueue[timeToFire];
+                m_timerEventQueue.Remove(timeToFire);
+
+                var elapsedTicks = m_currentTimerTick - timerEventInfo.StartTimeTicks;
+                var elapsedTime = (int)(elapsedTicks * TIMER_TICKS_DURATION);
+
+                m_isRunning = true;
+                DetailedInfo.Clear();
+                IlInjector.RestartCountingInstructions(MAX_NUM_EXECUTED_INSTRUCTIONS);
+                try
+                {
+                    timerEventInfo.Callback(elapsedTime);
+
+                    if (m_echoOutput.Length > 0)
+                    {
+                        DetailedInfo.Append(m_echoOutput);
+                    }
+                }
+                catch (TargetInvocationException ex)
+                {
+                    OnProgramTermination();
+
+                    if (m_echoOutput.Length > 0)
+                    {
+                        DetailedInfo.Append(m_echoOutput);
+                    }
+
+                    if (ex.InnerException is ScriptOutOfRangeException)
+                    {
+                        DetailedInfo.Append(MyTexts.GetString(MySpaceTexts.ProgrammableBlock_Exception_TooComplex));
+                    }
+                    else if (ex.InnerException != null)
+                    {
+                        DetailedInfo.Append(MyTexts.GetString(MySpaceTexts.ProgrammableBlock_Exception_ExceptionCaught) + ex.InnerException.Message);
+                    }
+                }
+
+                RaisePropertiesChanged();
+
+                m_isRunning = false;
+            }
+        }
+        
+        #endregion
     }
 }

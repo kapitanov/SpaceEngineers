@@ -148,7 +148,7 @@ namespace VRage.Compiler
 
             // If this type derives from a type created in-game, it must be replaced with the new type.
             var baseType = sourceType.BaseType;
-            if (baseType != null && typeLookup.ContainsKey(baseType.Name))
+            if (baseType != null && baseType.Assembly == sourceType.Assembly && typeLookup.ContainsKey(baseType.Name))
             {
                 TypeBuilder newBaseType;
                 if (typeLookup.TryGetValue(baseType.Name, out newBaseType))
@@ -159,8 +159,16 @@ namespace VRage.Compiler
 
             // If any of the interfaces of this type is from a type created in-game, it must be replaced with the new type.
             var interfaceTypes = sourceType.GetInterfaces().ToArray();
+            var hasSkippedInterfaces = false;
             for (var index = 0; index < interfaceTypes.Length; index++)
             {
+                if (interfaceTypes[index].Assembly != sourceType.Assembly)
+                {
+                    interfaceTypes[index] = null;
+                    hasSkippedInterfaces = true;
+                    continue;
+                }
+
                 TypeBuilder newInterfaceType;
                 if (typeLookup.TryGetValue(interfaceTypes[index].Name, out newInterfaceType))
                 {
@@ -168,6 +176,11 @@ namespace VRage.Compiler
                 }
             }
 
+            if (hasSkippedInterfaces)
+            {
+                interfaceTypes = interfaceTypes.Where(_ => _ != null).ToArray();
+            }
+            
             TypeBuilder newType = newModule.DefineType(sourceType.Name, attributes, baseType, interfaceTypes);
             createdTypes.Add(newType, sourceType);
             typeLookup.Add(newType.FullName, newType);
@@ -178,6 +191,11 @@ namespace VRage.Compiler
             var fields = sourceType.GetFields(BindingFlags.Static |BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.SetField | BindingFlags.GetField | BindingFlags.Instance);
             foreach (var field in fields)
             {
+                if (field.DeclaringType != sourceType)
+                {
+                    continue;
+                }
+
                 createdFields.Add(newType.DefineField(field.Name, field.FieldType, field.Attributes));
             }
         }
@@ -186,6 +204,11 @@ namespace VRage.Compiler
             var properties = sourceType.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.SetProperty | BindingFlags.GetProperty | BindingFlags.Instance);
             foreach (var property in properties)
             {
+                if (property.DeclaringType != sourceType)
+                {
+                    continue;
+                }
+
                 newType.DefineProperty(property.Name, PropertyAttributes.HasDefault, property.PropertyType, Type.EmptyTypes);
             }
         }
@@ -222,6 +245,7 @@ namespace VRage.Compiler
                 {
                     continue;
                 }
+
                 var parameters = method.GetParameters();
                 Type[] paramaterTypes = new Type[parameters.Length];
                 int i = 0;

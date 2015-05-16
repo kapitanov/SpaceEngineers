@@ -211,6 +211,7 @@
     <Compile Include="ModAPI\Ingame\IMyRefinery.cs" />
     <Compile Include="ModAPI\Ingame\IMyReflectorLight.cs" />
     <Compile Include="ModAPI\Ingame\IMyRemoteControl.cs" />
+    <Compile Include="ModAPI\Ingame\IMyScriptProgramEnvironment.cs" />
     <Compile Include="ModAPI\Ingame\IMyShipConnector.cs" />
     <Compile Include="ModAPI\Ingame\IMyShipController.cs" />
     <Compile Include="ModAPI\Ingame\IMyShipDrill.cs" />
@@ -231,6 +232,9 @@
     <Compile Include="ModAPI\Ingame\IMyWarhead.cs" />
     <Compile Include="ModAPI\IMyButtonPanel.cs" />
     <Compile Include="ModAPI\IMyShipMergeBlock.cs" />
+    <Compile Include="ModAPI\Ingame\MyScriptProgram.cs" />
+    <Compile Include="ModAPI\Ingame\MyScriptTimeoutFunction.cs" />
+    <Compile Include="ModAPI\Ingame\ScriptHasNoMainMethodException.cs" />
     <Compile Include="ModAPI\Ingame\TerminalActionParameter.cs" />
     <Compile Include="ModAPI\Interfaces\IMyDestroyableObject.cs" />
     <Compile Include="ModAPI\IMyIdentity.cs" />
@@ -665,6 +669,7 @@
     <Compile Include="ObjectBuilders\VRageData\SerializableVector3UByte.cs" />
     <Compile Include="Physics\MyPhysicsForceType.cs" />
     <Compile Include="Physics\MyRigidBodyDefs.cs" />
+    <Compile Include="Properties\InternalsVisibleTo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="utils\MyEntityIdentifier.cs" />
   </ItemGroup>
