@@ -193,7 +193,7 @@ namespace Sandbox.Engine.Networking
             m_publishResult = Result.Fail;
 
             string[] tags = { WORKSHOP_INGAMESCRIPT_TAG };
-            string[] ignoredExtensions = { ".sbmi",".png",".jpg"};
+            string[] ignoredExtensions = { ".sbmi", ".png", ".jpg" };
 
             MyGuiSandbox.AddScreen(m_asyncPublishScreen = new MyGuiScreenProgressAsync(MySpaceTexts.ProgressTextUploadingWorld,
                 null,
@@ -260,7 +260,7 @@ namespace Sandbox.Engine.Networking
                 string[] allIgnoredExtensions = new string[m_ignoredExecutableExtensions.Length + ignoredExtensions.Length];
                 ignoredExtensions.CopyTo(allIgnoredExtensions, 0);
                 m_ignoredExecutableExtensions.CopyTo(allIgnoredExtensions, ignoredExtensions.Length);
-                MyZipArchive.CreateFromDirectory(localFolder, tempFileFullPath, DeflateOptionEnum.Maximum, false, allIgnoredExtensions,false);
+                MyZipArchive.CreateFromDirectory(localFolder, tempFileFullPath, DeflateOptionEnum.Maximum, false, allIgnoredExtensions, false);
             }
             catch (Exception e)
             {
@@ -307,7 +307,7 @@ namespace Sandbox.Engine.Networking
                     steam.RemoteStorage.UpdatePublishedFileTags(updateHandle, tags);
                     steam.RemoteStorage.UpdatePublishedFileFile(updateHandle, steamItemFileName);
                     steam.RemoteStorage.UpdatePublishedFilePreviewFile(updateHandle, steamPreviewFileName);
-                    steam.RemoteStorage.CommitPublishedFileUpdate(updateHandle, delegate(bool ioFailure, RemoteStorageUpdatePublishedFileResult data)
+                    steam.RemoteStorage.CommitPublishedFileUpdate(updateHandle, delegate (bool ioFailure, RemoteStorageUpdatePublishedFileResult data)
                     {
                         m_publishResult = data.Result;
                         bool success = !ioFailure && data.Result == Result.OK;
@@ -329,7 +329,7 @@ namespace Sandbox.Engine.Networking
                     MySandboxGame.Log.WriteLine("Published file was not found. Publishing.");
 
                     steam.RemoteStorage.PublishWorkshopFile(steamItemFileName, steamPreviewFileName, MySteam.AppId, publishedTitle, publishedDescription, publishedDescription, visibility, tags,
-                        delegate(bool ioFailure, RemoteStoragePublishFileResult data)
+                        delegate (bool ioFailure, RemoteStoragePublishFileResult data)
                         {
                             m_publishResult = data.Result;
                             m_publishSuccess = !ioFailure && data.Result == Result.OK;
@@ -347,7 +347,7 @@ namespace Sandbox.Engine.Networking
                     {
                         MySandboxGame.Log.WriteLine("Subscribing to published file");
                         steam.RemoteStorage.SubscribePublishedFile(publishedFileId,
-                            delegate(bool ioFailure, RemoteStorageSubscribePublishedFileResult data)
+                            delegate (bool ioFailure, RemoteStorageSubscribePublishedFileResult data)
                             {
                                 var success = !ioFailure && data.Result == Result.OK;
                                 if (success)
@@ -399,7 +399,7 @@ namespace Sandbox.Engine.Networking
 
             using (var mrEvent = new ManualResetEvent(false))
             {
-                steam.RemoteStorage.FileShare(steamFileName, delegate(bool ioFailure, RemoteStorageFileShareResult data)
+                steam.RemoteStorage.FileShare(steamFileName, delegate (bool ioFailure, RemoteStorageFileShareResult data)
                 {
                     fileShareSuccess = !ioFailure && data.Result == Result.OK;
                     if (fileShareSuccess)
@@ -530,7 +530,7 @@ namespace Sandbox.Engine.Networking
                 // Retrieve details for each subscription.
                 int callResultCounter = 0;
                 int expectedResults = resultsByPublishedId.Count;
-                Action<bool, RemoteStorageGetPublishedFileDetailsResult> onGetDetailsCallResult = delegate(bool ioFailure, RemoteStorageGetPublishedFileDetailsResult data)
+                Action<bool, RemoteStorageGetPublishedFileDetailsResult> onGetDetailsCallResult = delegate (bool ioFailure, RemoteStorageGetPublishedFileDetailsResult data)
                 {
                     MySandboxGame.Log.WriteLine(string.Format("Obtained details: Id={4}; Result={0}; ugcHandle={1}; title='{2}'; tags='{3}'", data.Result, data.FileHandle, data.Title, data.Tags, data.PublishedFileId));
                     if (!ioFailure && data.Result == Result.OK && data.Tags.Length != 0)
@@ -635,7 +635,7 @@ namespace Sandbox.Engine.Networking
                     int processedCount = 0;
                     int totalItems = 0;
                     // Retrieve PublishedFileId for each subscription.
-                    Action<bool, RemoteStorageEnumerateUserSubscribedFilesResult> onEnumerateCallResult = delegate(bool ioFailure, RemoteStorageEnumerateUserSubscribedFilesResult data)
+                    Action<bool, RemoteStorageEnumerateUserSubscribedFilesResult> onEnumerateCallResult = delegate (bool ioFailure, RemoteStorageEnumerateUserSubscribedFilesResult data)
                     {
                         if (!ioFailure && data.Result == Result.OK)
                         {
@@ -685,7 +685,7 @@ namespace Sandbox.Engine.Networking
                 int callResultCounter = 0;
                 int expectedResults = resultsByPublishedId.Count;
                 var listToRemove = new List<UInt64>(resultsByPublishedId.Count - expectedResults);
-                Action<bool, RemoteStorageGetPublishedFileDetailsResult> onGetDetailsCallResult = delegate(bool ioFailure, RemoteStorageGetPublishedFileDetailsResult data)
+                Action<bool, RemoteStorageGetPublishedFileDetailsResult> onGetDetailsCallResult = delegate (bool ioFailure, RemoteStorageGetPublishedFileDetailsResult data)
                 {
                     MySandboxGame.Log.WriteLine(string.Format("Obtained details: Id={4}; Result={0}; ugcHandle={1}; title='{2}'; tags='{3}'", data.Result, data.FileHandle, data.Title, data.Tags, data.PublishedFileId));
                     if (!ioFailure && data.Result == Result.OK && data.Tags.ToLowerInvariant().Split(',').Contains(tag.ToLowerInvariant()))
@@ -786,7 +786,7 @@ namespace Sandbox.Engine.Networking
             int downloadSizeInBytes = 0;
             using (ManualResetEvent mrEvent = new ManualResetEvent(false))
             {
-                MySteam.API.RemoteStorage.UGCDownload(UGCHandle, 0, delegate(bool ioFailure, RemoteStorageDownloadUGCResult data)
+                MySteam.API.RemoteStorage.UGCDownload(UGCHandle, 0, delegate (bool ioFailure, RemoteStorageDownloadUGCResult data)
                 {
                     downloadSuccess = !ioFailure && data.Result == Result.OK;
                     if (downloadSuccess)
@@ -900,13 +900,16 @@ namespace Sandbox.Engine.Networking
         /// </summary>
         public static bool DownloadModsBlocking(List<SubscribedItem> mods)
         {
-            foreach (var mod in mods)
-            {
-                if (!MySteam.IsOnline)
-                    return false;
+            var interrupted = 0;
 
-                if (m_stop)
-                    return false;
+            Parallel.ForEach(mods, mod =>
+            {
+                if (!MySteam.IsOnline || m_stop || Interlocked.CompareExchange(ref interrupted, 0, 0) == 1)
+                {
+                    Interlocked.Exchange(ref interrupted, 1);
+                    return;
+                }
+
 
                 var localPackedModFullPath = Path.Combine(m_workshopModsPath, mod.PublishedFileId + m_workshopModSuffix);
 
@@ -914,15 +917,17 @@ namespace Sandbox.Engine.Networking
                 {
                     if (!DownloadItemBlocking(localPackedModFullPath, mod.UGCHandle))
                     {
-                        return false;
+                        Interlocked.Exchange(ref interrupted, 1);
+                        return;
                     }
                 }
                 else
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Up to date mod: Id = {0}, title = '{1}'", mod.PublishedFileId, mod.Title));
                 }
-            }
-            return true;
+            });
+
+            return Interlocked.CompareExchange(ref interrupted, 0, 0) == 0;
         }
 
         /// <summary>
@@ -930,13 +935,15 @@ namespace Sandbox.Engine.Networking
         /// </summary>
         public static bool DownloadBlueprintsBlocking(List<SubscribedItem> mods)
         {
-            foreach (var mod in mods)
-            {
-                if (!MySteam.IsOnline)
-                    return false;
+            var interrupted = 0;
 
-                if (m_stop)
-                    return false;
+            Parallel.ForEach(mods, mod =>
+            {
+                if (!MySteam.IsOnline || m_stop || Interlocked.CompareExchange(ref interrupted, 0, 0) == 1)
+                {
+                    Interlocked.Exchange(ref interrupted, 1);
+                    return;
+                }
 
                 var localPackedModFullPath = Path.Combine(m_workshopBlueprintsPath, mod.PublishedFileId + m_workshopBlueprintSuffix);
 
@@ -944,15 +951,17 @@ namespace Sandbox.Engine.Networking
                 {
                     if (!DownloadItemBlocking(localPackedModFullPath, mod.UGCHandle))
                     {
-                        return false;
+                        Interlocked.Exchange(ref interrupted, 1);
+                        return;
                     }
                 }
                 else
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Up to date mod: Id = {0}, title = '{1}'", mod.PublishedFileId, mod.Title));
                 }
-            }
-            return true;
+            });
+
+            return Interlocked.CompareExchange(ref interrupted, 0, 0) == 0;
         }
 
         public static bool DownloadScriptBlocking(SubscribedItem item)
@@ -999,7 +1008,7 @@ namespace Sandbox.Engine.Networking
 
             var fs = File.OpenWrite(localPackedModFullPath);
 
-            DataReceived onDataRecieved = delegate(HTTPRequestDataReceived data)
+            DataReceived onDataRecieved = delegate (HTTPRequestDataReceived data)
             {
                 if (data.ContextValue != publishedFileId)
                     return;
@@ -1011,7 +1020,7 @@ namespace Sandbox.Engine.Networking
 
             HTTP.DataReceived += onDataRecieved;
 
-            if (!HTTP.SendHTTPRequestAndStreamResponse(handle, delegate(bool ioFailure, HTTPRequestCompleted data)
+            if (!HTTP.SendHTTPRequestAndStreamResponse(handle, delegate (bool ioFailure, HTTPRequestCompleted data)
             {
                 HTTP.DataReceived -= onDataRecieved;
                 var success = !ioFailure && data.RequestSuccessful && data.StatusCode == HTTPStatusCode.OK;
@@ -1042,7 +1051,7 @@ namespace Sandbox.Engine.Networking
             bool success = false;
             uint dataSize = 0;
 
-            if (!HTTP.SendHTTPRequest(handle, delegate(bool ioFailure, HTTPRequestCompleted data)
+            if (!HTTP.SendHTTPRequest(handle, delegate (bool ioFailure, HTTPRequestCompleted data)
             {
                 if (!ioFailure && data.RequestSuccessful && data.StatusCode == HTTPStatusCode.OK)
                 {
@@ -1123,7 +1132,7 @@ namespace Sandbox.Engine.Networking
                     {
                         string xml = "";
 
-                        MySteamWebAPI.GetPublishedFileDetails(publishedFileIds, delegate(bool success, string data)
+                        MySteamWebAPI.GetPublishedFileDetails(publishedFileIds, delegate (bool success, string data)
                         {
                             if (!success)
                             {
@@ -1252,7 +1261,7 @@ namespace Sandbox.Engine.Networking
 
                                         if (fileSize > 10 * 1024 * 1024) // WTF Steam
                                         {
-                                            if (!DownloadModFromURLStream(url, publishedFileId, delegate(bool success)
+                                            if (!DownloadModFromURLStream(url, publishedFileId, delegate (bool success)
                                             {
                                                 if (!success)
                                                 {
@@ -1267,7 +1276,7 @@ namespace Sandbox.Engine.Networking
                                         }
                                         else
                                         {
-                                            if (!DownloadModFromURL(url, publishedFileId, delegate(bool success)
+                                            if (!DownloadModFromURL(url, publishedFileId, delegate (bool success)
                                             {
                                                 if (!success)
                                                 {
@@ -1374,7 +1383,7 @@ namespace Sandbox.Engine.Networking
 
                 using (ManualResetEvent mrEvent = new ManualResetEvent(false))
                 {
-                    MySteam.API.RemoteStorage.GetPublishedFileDetails(mod.PublishedFileId, 0, delegate(bool ioFailure, RemoteStorageGetPublishedFileDetailsResult data)
+                    MySteam.API.RemoteStorage.GetPublishedFileDetails(mod.PublishedFileId, 0, delegate (bool ioFailure, RemoteStorageGetPublishedFileDetailsResult data)
                     {
                         success = !ioFailure && data.Result == Result.OK;
                         if (success)
