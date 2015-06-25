@@ -29,7 +29,7 @@ Gravity Generators have some new features in SECE.
 
 1. Crack open your CubeBlocks.sbc with your editor of choice.
 2. Add the following to your Gravity Generators' `<Definition>`:
-  ```xml
+```xml
 <FieldSize>
   <!-- Minimum field size -->
   <Min x="0" y="0" z="0" />
@@ -40,6 +40,6 @@ Gravity Generators have some new features in SECE.
 </FieldSize>
 <!-- The same, but for the G's the generator puts out -->
 <Gravity Min="-1" Max="1" Default="1" />
-  ```
+```
 3. You can now adjust the field bounds and strengths to taste, even going beyond the prior 150m<sup>3</sup> maximum.
 4. Save it, and you're done.  Objects already present in-world won't be changed (except for the min-max checks).
