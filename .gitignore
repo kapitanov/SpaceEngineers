@@ -42,3 +42,8 @@ user.props
 3rd/SteamSDK/release/x64
 3rd/VRage.Native/debug/x64
 3rd/VRage.Native/release/x64
+/3rd/HavokWrapper_SE/debug/x64/HavokWrapper.dll
+/3rd/HavokWrapper_SE/debug/x86/HavokWrapper.dll
+/3rd/HavokWrapper_SE/release/x64/HavokWrapper.dll
+/3rd/SteamSDK/debug/x86/steam_api.dll
+/3rd/SteamSDK/release/x86/steam_api.dll
