@@ -14,7 +14,7 @@ namespace VRage.Network
         public override ulong ServerId { get; protected set; }
         public override ulong MySteamID { get; protected set; }
 
-        public MyRakNetClient(ulong steamID)
+        public MyLidgrenClient(ulong steamID)
             : base(steamID)
         {
             RegisterHandlers();
