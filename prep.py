@@ -6,7 +6,7 @@ import shutil
 # CONFIGURATION
 
 # Guess.
-SE_ROOT_DIR = os.path.abspath('F:\SteamLibrary\SteamApps\common\SpaceEngineers')
+SE_ROOT_DIR = os.path.abspath(sys.argv[1])
 
 Configurations = ('Release', 'Debug')
 Platforms = ('x86', 'x64')
@@ -54,6 +54,10 @@ if __name__ == '__main__':
       level=logging.DEBUG
   )
 
+  if not os.path.isdir(sys.argv[1]):
+    logging.error('{0} is not a directory.', sys.args[1])
+    logging.info('USAGE: python prep.py <path\\to\\SpaceEngineers>')
+    sys.exit(1)
   for c in Configurations:
     for p in Platforms:
       logging.info('Setting up %s/%s...', c, p)
