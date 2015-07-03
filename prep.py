@@ -9,22 +9,23 @@ import shutil
 SE_ROOT_DIR = os.path.abspath(sys.argv[1])
 
 Configurations = ('Release', 'Debug')
-Platforms = ('x86', 'x64')
+#Platforms = ('x86', 'x64')
+Platforms = ('x64',)
 Libraries = {
     'HavokWrapper_SE': {
-        'x86': [
-            'Bin/HavokWrapper.dll',
-            'Bin/HavokWrapper.xml',
-        ],
+        #'x86': [
+        #    'Bin/HavokWrapper.dll',
+        #    'Bin/HavokWrapper.xml',
+        #],
         'x64': [
             'Bin64/HavokWrapper.dll',
             'Bin64/HavokWrapper.xml',
         ],
     },
     'VRage.Native': {
-        'x86': [
-            'Bin/VRage.Native.dll'
-        ],
+        #'x86': [
+        #    'Bin/VRage.Native.dll'
+        #],
         'x64': [
             'Bin64/VRage.Native.dll'
         ],
@@ -34,10 +35,10 @@ Libraries = {
     #    'x64': ['Bin64/RakNet.dll'],
     # },
     'SteamSDK': {
-        'x86': [
-            'Bin/SteamSDK.dll',
-            'Bin/steam_api.dll',
-        ],
+        #'x86': [
+        #    'Bin/SteamSDK.dll',
+        #    'Bin/steam_api.dll',
+        #],
         'x64': [
             'Bin64/SteamSDK.dll',
             'Bin64/steam_api.dll',
@@ -71,7 +72,8 @@ if __name__ == '__main__':
             os.makedirs(topath)
           tofile = os.path.join(topath, os.path.basename(lib))
           if os.path.isfile(tofile):
-            # os.remove(tofile)
-            continue
+            logging.info('  rm %s', tofile)
+            os.remove(tofile)
+            #continue
           logging.info('  copy %s -> %s', frompath, topath)
           shutil.copy2(frompath, topath)
