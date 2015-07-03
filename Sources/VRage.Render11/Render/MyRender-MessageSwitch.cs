@@ -1058,6 +1058,11 @@ namespace VRageRender
                     MyEnvironment.SunSizeMultiplier = rMessage.SunSizeMultiplier;
                     MyEnvironment.SunBillboardEnabled = rMessage.SunBillboardEnabled;
 
+                    // SECE - Get skybox from server.
+					// HACK: Needs to permit DX11 skyboxes and full gamut of possible tweaks.
+                    MyEnvironment.DaySkybox = rMessage.BackgroundTexture;
+                    MyEnvironment.NightSkybox = rMessage.BackgroundTexture;
+
                     var skybox = rMessage.BackgroundTexture;
 
                     m_resetEyeAdaptation = m_resetEyeAdaptation || rMessage.ResetEyeAdaptation;
