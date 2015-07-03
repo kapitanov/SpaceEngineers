@@ -22,7 +22,7 @@ namespace SpaceEngineers.Game
         public static void SetupPerGameSettings()
         {
             MyPerGameSettings.Game = GameEnum.SE_GAME;
-            MyPerGameSettings.GameName = "Space Engineers";
+            MyPerGameSettings.GameName = "Space Engineers: Community Edition";
             MyPerGameSettings.GameIcon = "SpaceEngineers.ico";
             MyPerGameSettings.EnableGlobalGravity = false;
             MyPerGameSettings.GameModAssembly = "SpaceEngineers.Game.dll";

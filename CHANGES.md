@@ -11,4 +11,4 @@
   * Blocks using Gravity Generator behaviors are no longer forced to play the generator's droning sound.
   * See [Porting Gravity Generator Mods](docs/porting/gravity_generators.md)
   * DX11 renderer now uses user's skybox preferences, and is (somewhat) backwards-compatible with DX9 skyboxes.
-    * Still needs some work done to import colors and shaders.
+    * Still needs some work done to import colors and shader settings.
