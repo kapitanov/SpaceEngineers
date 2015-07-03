@@ -79,13 +79,14 @@ namespace Sandbox
             MySandboxGame.IsPirated = !isSteamPath && !manifestPresent;
 
             MySandboxGame.Log.Init(logName.ToString(), MyFinalBuildConstants.APP_VERSION_STRING);
-            MySandboxGame.Log.WriteLine("NOTE: Space Engineers: Community Edition build");
+            MySandboxGame.Log.WriteLine("NOTE: Space Engineers: Community Edition build.  NOT supported or endorsed by KEEN SWH LTD.");
             MySandboxGame.Log.WriteLine("Steam build: Always true");
+            // SECE - Deobfuscated for shits and giggles.
             MySandboxGame.Log.WriteLine(string.Format("Is official: {0} {1}{2}{3}",
                 MyFinalBuildConstants.IS_OFFICIAL,
-                (MyObfuscation.Enabled ? "[O]" : "[NO]"),
-                (isSteamPath ? "[IS]" : "[NIS]"),
-                (manifestPresent ? "[AMP]" : "[NAMP]")));
+                (MyObfuscation.Enabled ? "[Obfuscated (O)]" : "[Not Obfuscated (NO)]"),
+                (isSteamPath ? "[Steam Path (IS)]" : "[NOT Steam Path (NIS)]"),
+                (manifestPresent ? "[Manifest Present (AMP)]" : "[No Manifest Present (NAMP)]")));
             MySandboxGame.Log.WriteLine("Environment.ProcessorCount: " + Environment.ProcessorCount);
             MySandboxGame.Log.WriteLine("Environment.OSVersion: " + Environment.OSVersion);
             MySandboxGame.Log.WriteLine("Environment.CommandLine: " + Environment.CommandLine);
@@ -150,6 +151,7 @@ namespace Sandbox
                         p.Initialize();
                         var hash = p.ComputeHash(stream);
 
+                        // Why the hell is this still being calculated? - N3X
                         string expectedKey = "BgIAAACkAABSU0ExAAQAAAEAAQClSibD83Y6Akok8tAtkbMz4IpueWFra0QkkKcodwe2pV/RJAfyq5mLUGsF3JdTdu3VWn93VM+ZpL9CcMKS8HaaHmBZJn7k2yxNvU4SD+8PhiZ87iPqpkN2V+rz9nyPWTHDTgadYMmenKk2r7w4oYOooo5WXdkTVjAD50MroAONuQ==";
                         MySandboxGame.Log.WriteLine("Checksum file hash: " + Convert.ToBase64String(hash));
                         MySandboxGame.Log.WriteLine(string.Format("Checksum public key valid: {0}, Key: {1}", checksums.PublicKey == expectedKey, checksums.PublicKey));
