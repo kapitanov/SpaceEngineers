@@ -80,7 +80,7 @@ namespace Sandbox.Game.Entities
         }
 
         /// <summary>
-        /// The Gravity Generator's default <see cref="FieldSize"/>. 
+        /// The Gravity Generator's default <see cref="FieldSize"/>.
         /// Must be within <see cref="MinFieldSize"/> and <see cref="MaxFieldSize"/>.
         /// </summary>
         public Vector3 DefaultFieldSize
@@ -89,7 +89,7 @@ namespace Sandbox.Game.Entities
         }
 
         /// <summary>
-        /// The Gravity Generator's maximum <see cref="Gravity"/>. 
+        /// The Gravity Generator's maximum <see cref="Gravity"/>.
         /// </summary>
         public float MaxGravity
         {
@@ -97,7 +97,7 @@ namespace Sandbox.Game.Entities
         }
 
         /// <summary>
-        /// The Gravity Generator's minimum <see cref="Gravity"/>. 
+        /// The Gravity Generator's minimum <see cref="Gravity"/>.
         /// </summary>
         public float MinGravity
         {
@@ -105,15 +105,15 @@ namespace Sandbox.Game.Entities
         }
 
         /// <summary>
-        /// The Gravity Generator's default <see cref="Gravity"/>. 
+        /// The Gravity Generator's default <see cref="Gravity"/>.
         /// Must be within <see cref="MinGravity"/> and <see cref="MaxGravity"/>
         /// </summary>
         public float DefaultGravity
         {
             get { return BlockDefinition.Gravity.Default; }
         }
-        
-        public override BoundingBox? GetBoundingBox()  
+
+        public override BoundingBox? GetBoundingBox()
         {
             m_gizmoBoundingBox.Min = PositionComp.LocalVolume.Center - FieldSize / 2.0f;
             m_gizmoBoundingBox.Max = PositionComp.LocalVolume.Center + FieldSize / 2.0f;
@@ -172,13 +172,11 @@ namespace Sandbox.Game.Entities
             MyTerminalControlFactory.AddControl(fieldDepth);
 
             var gravityAcceleration = new MyTerminalControlSlider<MyGravityGenerator>("Gravity", MySpaceTexts.BlockPropertyTitle_GravityAcceleration, MySpaceTexts.BlockPropertyDescription_GravityAcceleration);
-            gravityAcceleration.SetLimits(
-                (g) => g.MinGravity, // Min
-                (g) => g.MaxGravity // Max
-            );
-            gravityAcceleration.DefaultValueGetter = (g) => g.DefaultGravity;
-            gravityAcceleration.Getter = (x) => x.m_gravityAcceleration / MyGravityProviderSystem.G;
-            gravityAcceleration.Setter = (x, v) => x.SyncObject.SendChangeGravityGeneratorRequest(ref x.m_fieldSize, v * MyGravityProviderSystem.G);
+            gravityAcceleration.SetLimits(-MyGravityProviderSystem.G, MyGravityProviderSystem.G);
+      			gravityAcceleration.DefaultValue = MyGravityProviderSystem.G;
+            gravityAcceleration.Getter = (x) => x.GravityAcceleration;
+            gravityAcceleration.Setter = (x, v) => x.SyncObject.SendChangeGravityGeneratorRequest(ref x.m_fieldSize, v);
+
             gravityAcceleration.Writer = (x, result) => result.AppendDecimal(x.m_gravityAcceleration / MyGravityProviderSystem.G, 2).Append(" G");
             gravityAcceleration.EnableActions();
             MyTerminalControlFactory.AddControl(gravityAcceleration);
@@ -194,7 +192,7 @@ namespace Sandbox.Game.Entities
             base.Init(objectBuilder, cubeGrid);
 
             SyncObject = new MySyncGravityGenerator(this);
-            
+
             PowerReceiver = new MyPowerReceiver(
                 MyConsumerGroupEnum.Utility,
                 false,
@@ -219,7 +217,7 @@ namespace Sandbox.Game.Entities
             return builder;
         }
 
-      
+
         protected override float CalculateRequiredPowerInput()
         {
             if (Enabled && IsFunctional)

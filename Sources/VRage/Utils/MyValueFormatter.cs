@@ -9,7 +9,7 @@ namespace VRage.Utils
     public class MyValueFormatter
     {
         static private NumberFormatInfo m_numberFormatInfoHelper;
-        
+
         static MyValueFormatter()
         {
             m_numberFormatInfoHelper = new NumberFormatInfo();
@@ -23,7 +23,7 @@ namespace VRage.Utils
         {
             m_numberFormatInfoHelper.NumberDecimalDigits = decimalDigits;
             return num.ToString("N", m_numberFormatInfoHelper);
-        }        
+        }
 
         //  Same as GetFormatedFloat() but allow to specify group separator
         public static string GetFormatedFloat(float num, int decimalDigits, string groupSeparator)
@@ -71,7 +71,7 @@ namespace VRage.Utils
             return 0;
         }
 
-        public static float? GetFloatFromString(string number, int decimalDigits, string groupSeparator) 
+        public static float? GetFloatFromString(string number, int decimalDigits, string groupSeparator)
         {
             float? result = null;
 
@@ -82,9 +82,9 @@ namespace VRage.Utils
             {
                 result = (float)System.Convert.ToDouble(number, m_numberFormatInfoHelper);
             }
-            catch 
+            catch
             {
-            }            
+            }
             m_numberFormatInfoHelper.NumberGroupSeparator = originalGroupSeparator;
 
             return result;
@@ -116,7 +116,7 @@ namespace VRage.Utils
         {
             return GetFormatedDecimal(num, 2) + " €";
         }
-        
+
         //  Especially for displaying the price on the web site
         public static string GetFormatedPriceUSD(decimal num)
         {
@@ -271,9 +271,20 @@ namespace VRage.Utils
         private static readonly string[] m_dataSizeUnitNames = new string[] { "B", "KB", "MB" };
         private static readonly long[] m_dataSizeUnitMultipliers = new long[] { 1L, 1024L, 1024 * 1024L, 1024 * 1024 * 1024L };
         private static readonly int[] m_dataSizeUnitDigits = new int[] { 1, 1, 1 };
+
         public static void AppendDataSizeInBestUnit(long sizeInBytes, StringBuilder output)
         {
-            AppendFormattedValueInBestUnit(sizeInBytes, m_dataSizeUnitNames, m_dataSizeUnitMultipliers, m_dataSizeUnitDigits, output);
+          AppendFormattedValueInBestUnit(sizeInBytes, m_dataSizeUnitNames, m_dataSizeUnitMultipliers, m_dataSizeUnitDigits,
+            output);
+        }
+
+        private static readonly string[] m_volumeUnitNames = new string[] { "mL", "cL", "dL", "L", "hL", "m³" };
+        private static readonly float[] m_volumeUnitMultipliers = new float[] { 0.000001f, 0.00001f, 0.0001f, 0.001f, 0.1f, 1f };
+        private static readonly int[] m_volumeUnitDigits = new int[] { 0, 0, 0, 0, 2, 1 };
+        public static void AppendVolumeInBestUnit(float volumeInCubicMeters, StringBuilder output)
+        {
+            AppendFormattedValueInBestUnit(volumeInCubicMeters, m_volumeUnitNames, m_volumeUnitMultipliers, m_volumeUnitDigits, output);
+
         }
 
         public static void AppendTimeExact(int timeInSeconds, StringBuilder output)
